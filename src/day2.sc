@@ -1,8 +1,8 @@
-import scala.io.Source._
+import common._
 
 object day1 {
-  val rawInput = fromInputStream(getClass.getResourceAsStream("day2.txt")).getLines.toList
-  val input: Seq[List[Int]] = rawInput.map(_.split("\\t").toList.map(_.toInt))
+  val rawInput = loadPackets(List("day2.txt"))
+  val input = rawInput.map(_.split("\\t").toList.map(_.toInt))
 
   val part1 = input.map(row => row.max - row.min).sum
 
