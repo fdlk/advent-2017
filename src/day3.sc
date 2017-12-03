@@ -1,3 +1,6 @@
+import spire.math.Complex
+import spire.implicits._
+
 object day3 {
   // Instructions
   sealed trait Instruction
@@ -5,49 +8,23 @@ object day3 {
   case object Move extends Instruction
 
   // State
-  sealed trait Direction {
-    def turn: Direction = this match {
-      case North => West
-      case East => North
-      case South => East
-      case West => South
-    }
-  }
+  type Direction = Complex[Float]
+  type Location = Complex[Float]
 
-  case object North extends Direction
-  case object East extends Direction
-  case object South extends Direction
-  case object West extends Direction
-
-  case class Location(x: Int, y: Int) {
-    def move(direction: Direction): Location = direction match {
-      case North => Location(x, y + 1)
-      case East => Location(x + 1, y)
-      case South => Location(x, y - 1)
-      case West => Location(x - 1, y)
-    }
-    def neighbors: List[Location] = List(
-      move(East),
-      move(East).move(North),
-      move(North),
-      move(West).move(North),
-      move(West),
-      move(West).move(South),
-      move(South),
-      move(East).move(South)
-    )
-    def distance(): Int = x.abs + y.abs
+  def neighbors(location: Location): List[Location] = {
+    (for (dx <- -1 to 1; dy <- -1 to 1 if dx != 0 || dy != 0)
+      yield location + Complex(dx.toFloat, dy.toFloat)).toList
   }
 
   case class State(location: Location, facing: Direction, stored: Map[Location,Int]) {
     def follow(instruction: Instruction): State = instruction match {
-      case Turn => State(location, facing.turn, stored)
+      case Turn => State(location, facing * Complex.i, stored)
       case Move =>
-        val nextLocation = location.move(facing)
-        val valueToStore = nextLocation.neighbors.map(location => stored.getOrElse(location, 0)).sum
+        val nextLocation = location + facing
+        val valueToStore = neighbors(nextLocation).map(location => stored.getOrElse(location, 0)).sum
         State(nextLocation, facing, stored.updated(nextLocation, valueToStore))
     }
-    def distance: Int = location.distance()
+    def distance: Long = (location.real.abs + location.imag.abs).round
   }
 
   // Simulation
@@ -56,7 +33,7 @@ object day3 {
     .flatMap(n => Stream(n, n)) // two edges of size n for each size
     .flatMap(n => Stream.fill(n)(Move) #::: Stream[Instruction](Turn)) // n moves and one turn per edge
 
-  val initialState = State(Location(0,0), East, Map(Location(0,0) -> 1))
+  val initialState = State(Complex.zero, Complex.one, Map(Complex.zero -> 1))
   val route: Stream[State] = instructions.scanLeft(initialState)(_.follow(_))
 
   // Solution
