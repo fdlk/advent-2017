@@ -7,12 +7,12 @@ object day4 {
   val input = rawInput.map(_.toInt).toVector
 
   @tailrec
-  def solve(instructions: Vector[Int], ip: Int, counter: Long, update: Int => Int): Long =
-    if (instructions.indices.contains(ip)) {
+  def solve(instructions: Vector[Int], update: Int => Int, ip: Int = 0, counter: Long = 0): Long =
+    if (instructions.indices contains ip) {
       val jump = instructions(ip)
-      solve(instructions.updated(ip, update(jump)), ip + jump, counter + 1, update)
+      solve(instructions.updated(ip, update(jump)), update, ip + jump, counter + 1)
     } else counter
 
-  solve(input, 0, 0, _ + 1)
-  solve(input, 0, 0, jump => if (jump >= 3) jump - 1 else jump + 1)
+  solve(input, _ + 1)
+  solve(input, jump => if (jump >= 3) jump - 1 else jump + 1)
 }
