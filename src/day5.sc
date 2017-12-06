@@ -2,7 +2,7 @@ import common._
 
 import scala.annotation.tailrec
 
-object day4 {
+object day5 {
   val rawInput = loadPackets(List("day5.txt"))
   val input = rawInput.map(_.toInt).toVector
 

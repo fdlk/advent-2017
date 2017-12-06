@@ -7,14 +7,15 @@ object day6 {
     def done: Boolean = visited.contains(conf)
     def redis: State = {
       val numRedis = conf.max
+      val whatAllGet = numRedis / conf.size
+      val leftover = numRedis % conf.size
       val source = conf.indexOf(numRedis)
       val nextConf: Configuration = conf.zipWithIndex.map({
         case (current, index) =>
-          val distance = (conf.size + index - (source + 1)) % conf.size
-          val leftover = numRedis % conf.size
-          Seq(if (index == source) 0 else current,     // all but source keep current amount
-              numRedis / conf.size,                    // all banks get this much
-              if (distance < leftover) 1 else 0 ).sum  // banks within range get one extra
+          val keep = if (index == source) 0 else current
+          val distanceFromSource = (index - (source + 1) + conf.size) % conf.size
+          val bonus = if (distanceFromSource < leftover) 1 else 0
+          keep + whatAllGet + bonus
       })
       State(nextConf, conf :: visited)
     }
