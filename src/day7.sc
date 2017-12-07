@@ -1,38 +1,33 @@
 import common.loadPackets
 
 object day7 {
-  val rawInput = loadPackets(List("day7.txt"))
-  val regex = """(\w+) \((\d+)\)( -> (.*))?""".r
 
   case class Program(name: String, weight: Int, children: List[String])
 
-  def parse(line: String) = line match {
-    case regex(name, weight, _, children) =>
-      Program(name, weight.toInt, if (children != null) children.split(", ").toList else Nil)
-  }
+  val regex = """(\w+) \((\d+)\)( -> (.*))?""".r
+  val input = loadPackets(List("day7.txt")).map({
+    case regex(name, weight, _, children) => Program(name, weight.toInt, Option(children).map(_.split(", ").toList).getOrElse(Nil))
+  })
+  val allChildren = input.flatMap(_.children).toSet
 
-  val input = rawInput.map(parse)
-  val programs = input.map(p => p.name -> p).toMap
+  val part1 = input.map(_.name).find(!allChildren.contains(_)).get
 
-  val allChildren = input.flatMap(_.children)
-  val part1 = input.find(p => p.children.nonEmpty && !allChildren.contains(p.name)).get.name
+  val lookup = input.map(program => program.name -> program).toMap
 
-  def weight(name: String): Int = {
-    val p = programs(name)
-    p.weight + p.children.map(weight).sum
-  }
+  def weight(program: Program): Int = program.weight + program.children.map(lookup).map(weight).sum
 
-  def part2(name: String): Option[Int] = {
-    val children = programs(name).children
-    if (children.map(weight).toSet.size <= 1)
-      Option.empty
-    else {
-      val balancedWeight = children.map(weight).groupBy(identity).maxBy(_._2.size)._1
-      val problemChild = children.find(weight(_) != balancedWeight).get
-      part2(problemChild)
-        .orElse(Some(programs(problemChild).weight + balancedWeight - weight(problemChild)))
+  def findNorm(weights: List[Int]): Option[Int] =
+    if (weights.toSet.size <= 1) None
+    else weights match {
+      case x :: y :: z :: _ => if (x == y) Some(x) else Some(z)
     }
+
+  def part2(program: Program, parentNorm: Int = 0): Int = {
+    val children = program.children.map(lookup)
+    findNorm(children.map(weight))
+      .map(norm => part2(children.find(weight(_) != norm).get, norm))
+      .getOrElse(program.weight + parentNorm - weight(program))
   }
 
-  part2(part1).get
+  part2(lookup(part1))
 }
