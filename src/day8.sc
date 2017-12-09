@@ -1,31 +1,31 @@
 import common.loadPackets
 
 type Registers = (Map[String, Long], Long)
+
 case class Instruction(register: String,
                        operator: String,
                        operand: Int,
                        checkReg: String,
                        checkOperator: String,
-                       checkOperand: Int)
-{
+                       checkOperand: Int) {
   def apply(state: Registers): Registers = state match {
-    case (registers:Map[String, Long], max: Long) =>
-    val value: Long = registers.getOrElse(register, 0)
-    val checkValue: Long = registers.getOrElse(checkReg, 0)
-    val shouldOperate: Boolean = checkOperator match {
-      case "<=" => checkValue <= checkOperand
-      case "<" => checkValue < checkOperand
-      case ">=" => checkValue >= checkOperand
-      case "==" => checkValue == checkOperand
-      case "!=" => checkValue != checkOperand
-      case ">" => checkValue > checkOperand
-    }
-    if( shouldOperate ) {
-      val multiplier = if( operator == "inc") 1 else -1
-      val newValue = value + operand * multiplier
-      val newRegisters = registers.updated(register, newValue)
-      (newRegisters, Math.max(max, newValue))
-    } else state
+    case (registers: Map[String, Long], max: Long) =>
+      val checkValue: Long = registers.getOrElse(checkReg, 0)
+      val shouldOperate: Boolean = checkOperator match {
+        case "<=" => checkValue <= checkOperand
+        case "<" => checkValue < checkOperand
+        case ">=" => checkValue >= checkOperand
+        case "==" => checkValue == checkOperand
+        case "!=" => checkValue != checkOperand
+        case ">" => checkValue > checkOperand
+      }
+      if (shouldOperate) {
+        val value: Long = registers.getOrElse(register, 0)
+        val multiplier = if (operator == "inc") 1 else -1
+        val newValue = value + operand * multiplier
+        val newRegisters = registers.updated(register, newValue)
+        (newRegisters, Math.max(max, newValue))
+      } else state
   }
 }
 
