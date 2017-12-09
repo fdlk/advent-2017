@@ -1,6 +1,7 @@
 import common.loadPackets
 
-type Registers = (Map[String, Long], Long)
+type Registers = Map[String, Long]
+type State = (Registers, Long)
 
 case class Instruction(register: String,
                        operator: String,
@@ -8,8 +9,8 @@ case class Instruction(register: String,
                        checkReg: String,
                        checkOperator: String,
                        checkOperand: Int) {
-  def apply(state: Registers): Registers = state match {
-    case (registers: Map[String, Long], max: Long) =>
+  def apply(state: State): State = state match {
+    case (registers: Registers, max: Long) =>
       val checkValue: Long = registers.getOrElse(checkReg, 0)
       val shouldOperate: Boolean = checkOperator match {
         case "<=" => checkValue <= checkOperand
@@ -36,7 +37,7 @@ val instructions = input.map({
     Instruction(register, operator, operand.toInt, checkReg, checkOp, checkOperand.toInt)
 })
 
-val initialState: Registers = (Map(), 0)
+val initialState: State = (Map(), 0)
 val finalState = instructions.foldLeft(initialState)((state, instruction) => instruction.apply(state))
 val part1 = finalState._1.values.max
 val part2 = finalState._2
