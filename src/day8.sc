@@ -1,7 +1,18 @@
 import common.loadPackets
 
 type Registers = Map[String, Long]
-type State = (Registers, Long)
+
+case class Processor(registers: Registers = Map(), max: Long = 0) {
+  def lookup(register: String) = registers.getOrElse(register, 0)
+
+  def process(instruction: Instruction): Processor = {
+    if (instruction.shouldOperate(lookup(instruction.checkReg))) {
+      val newValue = instruction.operate(lookup(instruction.register))
+      Processor(registers.updated(instruction.register, newValue),
+        Math.max(max, newValue))
+    } else this
+  }
+}
 
 case class Instruction(register: String,
                        operator: String,
@@ -9,24 +20,18 @@ case class Instruction(register: String,
                        checkReg: String,
                        checkOperator: String,
                        checkOperand: Int) {
-  def apply(state: State): State = state match {
-    case (registers: Registers, max: Long) =>
-      val checkValue: Long = registers.getOrElse(checkReg, 0)
-      val shouldOperate: Boolean = checkOperator match {
-        case "<=" => checkValue <= checkOperand
-        case "<" => checkValue < checkOperand
-        case ">=" => checkValue >= checkOperand
-        case "==" => checkValue == checkOperand
-        case "!=" => checkValue != checkOperand
-        case ">" => checkValue > checkOperand
-      }
-      if (shouldOperate) {
-        val value: Long = registers.getOrElse(register, 0)
-        val multiplier = if (operator == "inc") 1 else -1
-        val newValue = value + operand * multiplier
-        val newRegisters = registers.updated(register, newValue)
-        (newRegisters, Math.max(max, newValue))
-      } else state
+  def shouldOperate(checkValue: Long): Boolean = checkOperator match {
+    case "<=" => checkValue <= checkOperand
+    case "<" => checkValue < checkOperand
+    case ">=" => checkValue >= checkOperand
+    case "==" => checkValue == checkOperand
+    case "!=" => checkValue != checkOperand
+    case ">" => checkValue > checkOperand
+  }
+
+  def operate(oldValue: Long): Long = operator match {
+    case "inc" => oldValue + operand
+    case "dec" => oldValue - operand
   }
 }
 
@@ -37,7 +42,6 @@ val instructions = input.map({
     Instruction(register, operator, operand.toInt, checkReg, checkOp, checkOperand.toInt)
 })
 
-val initialState: State = (Map(), 0)
-val finalState = instructions.foldLeft(initialState)((state, instruction) => instruction.apply(state))
-val part1 = finalState._1.values.max
-val part2 = finalState._2
+val finalState = instructions.foldLeft(Processor())(_ process _)
+val part1 = finalState.registers.values.max
+val part2 = finalState.max
