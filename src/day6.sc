@@ -1,3 +1,5 @@
+import java.lang.Math.floorMod
+
 object day6 {
   val rawInput = "2\t8\t8\t5\t4\t2\t3\t1\t5\t5\t1\t2\t15\t13\t5\t14".split("\\s")
   type Configuration = List[Int]
@@ -13,7 +15,7 @@ object day6 {
       val nextConf: Configuration = conf.zipWithIndex.map({
         case (current, index) =>
           val keep = if (index == source) 0 else current
-          val distanceFromSource = (index - (source + 1) + conf.size) % conf.size
+          val distanceFromSource = floorMod(index - (source + 1), conf.size)
           val bonus = if (distanceFromSource < leftover) 1 else 0
           keep + whatAllGet + bonus
       })
