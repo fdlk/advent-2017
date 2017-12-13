@@ -2,22 +2,16 @@ import common._
 
 object day13 {
   val rawInput: List[String] = loadPackets(List("day13.txt"))
-  val depths = rawInput.flatMap(
-    _.split(", ").toList
-      .map(_.split(": ").toList.map(_.toInt))
-      .map({ case List(a, b) => a -> b }))
-    .toMap
+  val regex = """(\d+): (\d+)""".r
+  val scanners = rawInput.map({case regex(depth, range) => Scanner(depth.toInt, range.toInt)})
 
-  def detected(depth: Int, range: Int, delay: Int=0): Boolean =
-    (depth + delay) % (2 * range - 2) == 0
+  case class Scanner(depth: Int, range: Int) {
+    def detected(delay: Int): Boolean = (depth + delay) % (2 * range - 2) == 0
+    def severity: Int = if (detected(0)) depth * range else 0
+  }
 
-  val part1 = depths.map({
-    case (depth, range) if detected(depth, range) => depth * range
-    case _ => 0
-  }).sum
+  def safe(delay: Int): Boolean = scanners.forall(!_.detected(delay))
 
-  def safe(delay: Int): Boolean =
-    depths.forall({case (depth, range) => !detected(depth, range, delay)})
-
+  val part1 = scanners.map(_.severity).sum
   val part2 = Stream.from(0).find(safe).get
 }
