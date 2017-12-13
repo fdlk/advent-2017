@@ -8,20 +8,16 @@ object day13 {
       .map({ case List(a, b) => a -> b }))
     .toMap
 
-  def scanner(depth: Int, range: Int, delay: Int=0): Int = {
-    val period = 2 * range - 2
-    val i = (depth + delay) % period
-    if (i <= range - 1) i
-    else period - i
-  }
+  def detected(depth: Int, range: Int, delay: Int=0): Boolean =
+    (depth + delay) % (2 * range - 2) == 0
 
   val part1 = depths.map({
-    case (depth, range) if scanner(depth, range) == 0 => depth * range
+    case (depth, range) if detected(depth, range) => depth * range
     case _ => 0
   }).sum
 
   def safe(delay: Int): Boolean =
-    depths.forall({case (depth, range) => scanner(depth, range, delay) != 0})
+    depths.forall({case (depth, range) => !detected(depth, range, delay)})
 
   val part2 = Stream.from(0).find(safe).get
 }
