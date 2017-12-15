@@ -13,16 +13,18 @@ object day14 {
     )
   }
 
-  def toSectors(row: String, y: Int): Set[Sector] = row.zipWithIndex.map({
-    case (col, x) if col == '1' => Set(Sector(x, y))
-    case _ => Set.empty
-  }).toSet.flatten
+  def toSectors(row: String, y: Int): Set[Sector] = row.zipWithIndex
+    .filter(_._1 == '1')
+    .map(_._2)
+    .map(Sector(_, y))
+    .toSet
 
   val input = "amgozmfv"
   val sectors: Set[Sector] = (0 to 127)
     .map(x => f"$input-$x")
     .map(knotHash)
-    .map(BigInt(_, 16).toString(2))
+    .map(BigInt(_, 16))
+    .map(_.toString(2))
     .map(s => Stream.fill(128 - s.length)('0').mkString + s)
     .zipWithIndex
     .map({ case (row, y) => toSectors(row, y) })
@@ -30,6 +32,7 @@ object day14 {
 
   val part1 = sectors.size
 
+  @tailrec
   def floodFill(group: Set[Sector]): Set[Sector] = {
     val updated = group ++ group.flatMap(_.neighbors).intersect(sectors)
     if (updated == group) group
