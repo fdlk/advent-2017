@@ -1,26 +1,16 @@
-import scala.annotation.tailrec
-
 object day15 {
-  val divisor: Int = 2147483647
-  val judgeBits = Math.pow(2, 16).toInt
+  def next(factor: Int)(value: Long) = value * factor % 2147483647
 
-  @tailrec
-  def generator(factor: Int, multipleOf: Int = 1)(value: Long): Long = {
-    val candidate: Long = (value * factor) % divisor
-    if (candidate % multipleOf == 0) candidate
-    else generator(factor, multipleOf)(candidate)
+  def generator(start: Long, factor: Int) = Iterator.iterate(start)(next(factor)).drop(1)
+
+  def a = generator(703L, 16807)
+
+  def b = generator(516L, 48271)
+
+  def judge(pair: (Long, Long)): Boolean = pair match {
+    case (a, b) => a % 65536 == b % 65536
   }
 
-  @tailrec
-  def count(a: Long => Long, b: Long => Long, prevA: Long, prevB: Long, left: Int, found: Int): Int =
-    if (left == 0) found
-    else {
-      val nextA = a(prevA)
-      val nextB = b(prevB)
-      val judgement: Boolean = nextA % judgeBits == nextB % judgeBits
-      count(a, b, nextA, nextB, left - 1, if (judgement) found + 1 else found)
-    }
-
-  val part1 = count(generator(16807), generator(48271), 703, 516, 40000000, 0)
-  val part2 = count(generator(16807,4), generator(48271,8), 703, 516, 5000000, 0)
+  val part1 = a.zip(b).take(40000000).count(judge)
+  val part2 = a.filter(_ % 4 == 0).zip(b.filter(_ % 8 == 0)).take(10000000).count(judge)
 }
