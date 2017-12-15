@@ -7,10 +7,8 @@ object day15 {
 
   def b = generator(516L, 48271)
 
-  def judge(pair: (Long, Long)): Boolean = pair match {
-    case (a, b) => a % 65536 == b % 65536
-  }
+  def judge(a: Long, b: Long): Boolean = a % 65536 == b % 65536
 
-  val part1 = a.zip(b).take(40000000).count(judge)
-  val part2 = a.filter(_ % 4 == 0).zip(b.filter(_ % 8 == 0)).take(10000000).count(judge)
+  val part1 = a.zip(b).take(40000000).count(judge.tupled)
+  val part2 = a.filter(_ % 4 == 0).zip(b.filter(_ % 8 == 0)).take(10000000).count(judge.tupled)
 }
