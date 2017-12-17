@@ -6,10 +6,10 @@ object day14 {
 
   case class Sector(x: Int, y: Int) {
     lazy val neighbors: Set[Sector] = Set(
-      copy(x - 1, y),
-      copy(x, y - 1),
-      copy(x + 1, y),
-      copy(x, y + 1)
+      copy(x = x - 1),
+      copy(y = y - 1),
+      copy(x = x + 1),
+      copy(y = y + 1)
     )
   }
 
