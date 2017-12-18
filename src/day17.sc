@@ -3,14 +3,16 @@ object day17 {
 
   case class State(buffer: List[Int] = List(0), pos: Int = 0) {
     val n = buffer.length
+
     def next: State = {
       val newPos = (pos + step) % n + 1
       State(buffer.patch(newPos, List(n), 0), newPos)
     }
+
     def elementAfterPos = buffer(pos + 1)
   }
 
-  case class SimplifiedState(elementAfterZero: Int=0, n: Int=1, pos: Int=1) {
+  case class SimplifiedState(elementAfterZero: Int = 0, n: Int = 1, pos: Int = 1) {
     def next: SimplifiedState = {
       val newPos = (pos + step) % n + 1
       SimplifiedState(if (newPos == 1) n else elementAfterZero, n + 1, newPos)
