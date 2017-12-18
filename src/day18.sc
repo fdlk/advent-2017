@@ -12,10 +12,6 @@ object day18 {
       case 'p' => copy(p = fun(p)).jmp(1)
     }
 
-    def cpy(to: Char, from: String): Regs = update(to, (_) => read(from))
-
-    def jmp(offset: Int): Regs = copy(ip = ip + offset)
-
     def read(arg: String): Long = arg match {
       case "a" => a
       case "b" => b
@@ -25,21 +21,16 @@ object day18 {
       case _ => arg.toLong
     }
 
-    def set(arg: Char, value: String): Regs = update(arg, (x) => read(value))
-
+    def jmp(offset: Int): Regs = copy(ip = ip + offset)
+    def set(arg: Char, value: String): Regs = update(arg, _ => read(value))
     def jgz(arg: String, value: String): Regs = if (read(arg) > 0) jmp(read(value).toInt) else jmp(1)
-
     def add(arg: Char, value: String): Regs = update(arg, _ + read(value))
-
     def mul(arg: Char, value: String): Regs = update(arg, _ * read(value))
-
     def mod(arg: Char, value: String): Regs = update(arg, _ % read(value))
-
     def rcv(arg: Char): Regs = received match {
       case r :: rs => copy(received = rs).set(arg, r.toString)
       case Nil => copy(waiting = true)
     }
-
     def snd(arg: String): Regs = copy(sent = read(arg) :: sent).jmp(1)
   }
 
@@ -47,25 +38,15 @@ object day18 {
 
   class InstructionParser extends JavaTokenParsers {
     def register: Parser[Char] = ("a" | "b" | "f" | "i" | "p") ^^ {_.charAt(0)}
-
     def offset: Parser[Int] = opt("+") ~> wholeNumber ^^ {_.toInt}
-
     def operand: Parser[String] = ("a" | "b" | "f" | "i" | "p" | offset) ^^ {_.toString}
-
     def parseSnd: Parser[Instruction] = "snd" ~> operand ^^ { value => state => state.snd(value) }
-
     def parseRcv: Parser[Instruction] = "rcv" ~> register ^^ { arg => state => state.rcv(arg) }
-
     def parseSet: Parser[Instruction] = "set" ~> register ~ operand ^^ { case arg ~ value => state => state.set(arg, value) }
-
     def parseJgz: Parser[Instruction] = "jgz" ~> operand ~ operand ^^ { case arg ~ value => state => state.jgz(arg, value) }
-
     def parseAdd: Parser[Instruction] = "add" ~> register ~ operand ^^ { case arg ~ value => state => state.add(arg, value) }
-
     def parseMul: Parser[Instruction] = "mul" ~> register ~ operand ^^ { case arg ~ value => state => state.mul(arg, value) }
-
     def parseMod: Parser[Instruction] = "mod" ~> register ~ operand ^^ { case arg ~ value => state => state.mod(arg, value) }
-
     def instruction: Parser[Instruction] = parseSet | parseSnd | parseAdd | parseMul | parseMod | parseRcv | parseJgz
   }
 
@@ -81,9 +62,9 @@ object day18 {
   case class State(p0: Regs = Regs(), p1: Regs = Regs(p = 1), numSentP1: Int = 0) {
     def deadlocked: Boolean = p0.waiting && p0.sent.isEmpty && p1.waiting && p1.sent.isEmpty
 
-    def roll: State = copy(
-      p0 = Stream.iterate(p0)(step).find(_.waiting).get,
-      p1 = Stream.iterate(p1)(step).find(_.waiting).get
+    def run: State = copy(
+      p0 = Iterator.iterate(p0)(step).find(_.waiting).get,
+      p1 = Iterator.iterate(p1)(step).find(_.waiting).get
     )
 
     def exchange: State = copy(
@@ -93,5 +74,5 @@ object day18 {
     )
   }
 
-  val part2 = Iterator.iterate(State())(_.exchange.roll).find(_.deadlocked).get.numSentP1
+  val part2 = Iterator.iterate(State())(_.exchange.run).find(_.deadlocked).get.numSentP1
 }
